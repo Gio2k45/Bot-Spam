@@ -6,6 +6,7 @@ import subprocess
 import requests
 import datetime
 
+API_KEY = '92f483687ed2bd458d8b35ca93ab6bcf'
 bot_token = '6061152195:AAFuoqptzWrEpAnk_bbO-odmCevgZuW_yqE' 
 bot = telebot.TeleBot(bot_token)
 processes = []
@@ -143,8 +144,36 @@ def spam(message):
     process = subprocess.Popen(["python", file_path, phone_number, lap])
     processes.append(process)
     bot.reply_to(message, f'⏸️ On Spam 📳{phone_number}🆘\n🆗 Successful Attack \n🕒 Lặp lại: {lap} \n🤖 Bot @nphong_bot \n💞 Liên Hệ Admin @nphong \n📫 Donate cho Admin chút tiền ăn kẹo, mở server mới: \n🏦 MB: 0000023450000 \n🍀 Cảm ơn! \n')
-  
-@bot.message_handler(commands=['help'])
+
+
+#Hàm thời tiết
+@bot.message_handler(commands=['weather'])
+def weather(message):
+    user_id = str(message.from_user.id)
+    if user_id != ADMIN_ID:
+        bot.reply_to(message, 'Bạn không có quyền sử dụng lệnh này.')
+        return
+
+    city = message.text.split('/weather', 1)[1].strip()
+    if not city:
+        bot.reply_to(message, 'Vui lòng nhập tên thành phố.')
+        return
+
+    try:
+        response = requests.get(f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric')
+        data = response.json()
+        if data['cod'] == '404':
+            bot.reply_to(message, 'Không tìm thấy thông tin thời tiết cho thành phố này.')
+        else:
+            weather_desc = data['weather'][0]['description']
+            temp = data['main']['temp']
+            humidity = data['main']['humidity']
+            wind_speed = data['wind']['speed']
+            bot.reply_to(message, f'Thời tiết tại {city}:\nMô tả: {weather_desc}\nNhiệt độ: {temp}°C\nĐộ ẩm: {humidity}%\nTốc độ gió: {wind_speed} m/s')
+    except requests.exceptions.RequestException as e:
+        bot.reply_to(message, 'Đã xảy ra lỗi khi truy xuất dữ liệu thời tiết.')
+
+@bot.message_handler(commands=['hdsd'])
 def help(message):
     help_text = '''
 Danh sách lệnh:
